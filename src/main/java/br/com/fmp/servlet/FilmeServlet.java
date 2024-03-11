@@ -1,9 +1,11 @@
 package br.com.fmp.servlet;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,36 +16,25 @@ import br.com.fmp.modelo.Filme;
 
 @WebServlet("/filme")
 public class FilmeServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Override
-	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		Filme coringa = new Filme("Coringa", "Drama", 2019);
-		Filme matrix = new Filme("Matrix", "Ação", 1999);
-		Filme forrestGump = new Filme("Forrest Gump", "Drama", 1994);
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        List<Filme> filmes = new ArrayList<>();
+        filmes.add(new Filme("Coringa", "Drama", 2019));
+        filmes.add(new Filme("Matrix", "Ação", 1999));
+        filmes.add(new Filme("Forrest Gump", "Drama", 1994));
 
-		ArrayList<Filme> filmes = new ArrayList<Filme>();
+        String genero = req.getParameter("genero");
+        List<Filme> listaFiltrada = null;
+        if (genero != null && !genero.isEmpty()) {
+            listaFiltrada = filmes.stream()
+                                  .filter(filme -> filme.getGenero().equalsIgnoreCase(genero))
+                                  .collect(Collectors.toList());
+        }
 
-		filmes.add(coringa);
-		filmes.add(matrix);
-		filmes.add(forrestGump);
-
-		String genero = req.getParameter("genero");
-
-		resp.setContentType("text/HTML");
-		PrintWriter out = resp.getWriter();
-
-		out.println("<h2>Lista de Filmes utilizando Servlets:</h2>");
-		out.println("<ol>");
-
-		filmes.stream()
-	      .filter(filme -> filme.getGenero() != null && genero != null && filme.getGenero().toUpperCase().equals(genero.toUpperCase()))
-	      .forEach(filme -> {
-					out.println(String.format("<li> Nome: %s", filme.getNome()));
-					out.println(String.format(" Genero: %s", filme.getGenero()));
-					out.println(String.format(" Ano: %s </li>", filme.getAno()));
-				});
-		out.close();
-	}
-
+        req.setAttribute("listaFiltrada", listaFiltrada);
+        RequestDispatcher dispatcher = req.getRequestDispatcher("lista-filmes.jsp");
+        dispatcher.forward(req, resp);
+    }
 }
